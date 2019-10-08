@@ -1,6 +1,6 @@
 # Orthello - DYOA at TU Graz WS 2019
-# Name:       YOUR_NAME
-# Student ID: YOUR_STUDENT_ID
+# Name:       Martin Baumann
+# Student ID: 11914789
 
 # STATIC STRINGS - DO NOT CHANGE
 
@@ -55,7 +55,7 @@ def printBoard(boardData):
   row_count = 0
 
   for row in boardData:
-    column_string = " " + row_keys[row_count] + " │";
+    column_string = " " + row_keys[row_count] + " │"
     for column in row:
       if column == 1:
         column_text = TERMINAL_COLOR_1 + "1" + TERMINAL_COLOR_NC
