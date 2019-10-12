@@ -121,6 +121,7 @@ def convCoordToNum(field):
 def setStone(player, field):
   game_field[field[0]][field[1]] = player
 
+<<<<<<< Updated upstream
 def checkTurnPossible(field, current_player):
   if current_player == 1:
     opponent = 2
@@ -147,6 +148,10 @@ def checkTurnPossible(field, current_player):
       continue
     
     return True
+=======
+def checkTurnPossible(field, player):
+  
+>>>>>>> Stashed changes
 
 def turnStones(field_placed):
   current_player = fieldValue(field_placed)
@@ -194,12 +199,15 @@ def playTurn(current_player):
   field = convCoordToNum(inp)
 
   setStone(current_player, field)
+<<<<<<< Updated upstream
 
   if not checkTurnPossible(field, current_player):
     print(ERROR_NOT_ALLOWED)
     setStone(0, field)
     return False
 
+=======
+>>>>>>> Stashed changes
   turnStones(field)
   return True
 
