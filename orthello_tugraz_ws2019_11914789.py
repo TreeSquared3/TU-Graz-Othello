@@ -34,7 +34,7 @@ INPUT_QUIT = "quit"
 
 # END OF STATIC STRINGS
 
-game_field = [
+game_field_start = [
   [0, 0, 0, 0, 0, 0, 0, 0],
   [0, 0, 0, 0, 0, 0, 0, 0],
   [0, 0, 0, 0, 0, 0, 0, 0],
@@ -44,6 +44,8 @@ game_field = [
   [0, 0, 0, 0, 0, 0, 0, 0],
   [0, 0, 0, 0, 0, 0, 0, 0],
 ]
+
+game_field = game_field_start
 
 
 # A function to print boardData provided.
@@ -75,83 +77,128 @@ def printBoard(boardData):
   print("     0   1   2   3   4   5   6   7  ")
 
 
-def main():
-  printBoard(game_field)
-  in_progress = True
-  current_player = 1
-
-  while(in_progress):
-    if not playTurn(current_player):
-      continue
-
-    printBoard(game_field)
-
-    if current_player == 1:
-      current_player = 2
-    else:
-      current_player = 1
-
-
-
-def checkFieldInRange(field):
-  if not (int(field[0]) in range(0,7) and int(field[1]) in range(0,7)):
-    print(ERROR_INVALID_INPUT)
-    return False
-  return True
-
-def checkFieldOccupied(field):
-  if not fieldValue(field) == 0:
-    print(ERROR_OCCUPIED)
-    return False
-  return True
-
-def checkInput(inp):
-  #implement detection stuff other than field
-  return True
-
 def fieldValue(field):
   return game_field[field[0]][field[1]]
 
 def convNumToCoord(field):
   return chr(ord("A")+field[0])+str(field[1])
 
-def convCoordToNum(field):
-  return ord(field[0])-ord("A"), int(field[1])
+def convCoordToNum(coord):
+  return ord(coord[0])-ord("A"), int(coord[1])
+  
 
-def setStone(player, field):
-  game_field[field[0]][field[1]] = player
+def checkFieldInRange(field):
+  if not (int(field[0]) in range(0,8) and int(field[1]) in range(0,8)):
+    return False
+  return True
 
-<<<<<<< Updated upstream
+def checkFieldOccupied(field):
+  if not fieldValue(field) == 0:
+    print(ERROR_OCCUPIED)
+    return True
+  return False
+
+def checkValidCoord(coord):
+  if len(coord) != 2:
+    return False
+  
+  try:
+    field = convCoordToNum(coord)
+  except:
+    return False
+  
+  if not checkFieldInRange(field):
+    return False
+
+  return True
+
 def checkTurnPossible(field, current_player):
   if current_player == 1:
     opponent = 2
   else:
     opponent = 1
   
+  if checkFieldOccupied(field):
+    return False
+
   for offset_col, offset_row in ((-1,0),(-1,1),(0,1),(1,1),(1,0),(1,-1),(0,-1),(1,-1)): #up, up-right, right, down-right, down, down-left, left, up-left
     fieldToCheck = list(field)
     fieldToCheck[0] += offset_col
     fieldToCheck[1] += offset_row
 
-    if fieldValue(fieldToCheck) == 0:
+    if not checkFieldInRange(fieldToCheck):
       continue
-    if fieldValue(fieldToCheck) == current_player:
+    if not fieldValue(fieldToCheck) == opponent:
       continue
 
     while(fieldValue(fieldToCheck) == opponent):
       fieldToCheck[0] += offset_col
       fieldToCheck[1] += offset_row
-    
-    lastField = fieldToCheck
+      if not checkFieldInRange(fieldToCheck):
+        continue
 
-    if fieldValue(lastField) == 0:
+    if not fieldValue(fieldToCheck) == current_player:
       continue
     
     return True
-=======
-def checkTurnPossible(field, player):
+
+  return False
+
+def checkAnyTurnPossible(current_player):
+  for i in range(0,8):
+      for u in range(0,8):
+        if fieldValue((i,u)) == 0:
+          if checkTurnPossible((i,u), current_player):
+            return True
+  return False
+
+def turnPoints(current_player, field):
+  points = 0
   
->>>>>>> Stashed changes
+  if current_player == 1:
+    opponent = 2
+  else:
+    opponent = 1
+
+  if checkFieldOccupied(field):
+    return 0
+
+  for offset_col, offset_row in ((-1,0),(-1,1),(0,1),(1,1),(1,0),(1,-1),(0,-1),(-1,-1)): #up, up-right, right, down-right, down, down-left, left, up-left
+    fieldToCheck = list(field)
+    fieldToCheck[0] += offset_col
+    fieldToCheck[1] += offset_row
+
+    if not checkFieldInRange(fieldToCheck):
+      continue
+
+    points_temp = 0
+
+    while(fieldValue(fieldToCheck) == opponent):
+      points_temp += 1
+
+      fieldToCheck[0] += offset_col
+      fieldToCheck[1] += offset_row
+      if not checkFieldInRange(fieldToCheck):
+        continue
+
+    if fieldValue(fieldToCheck) == current_player:
+      points += points_temp
+
+  return points
+
+def allTurnsPoints(current_player):
+  turns = list()
+  for i in range(0,8):
+      for u in range(0,8):
+        if fieldValue((i,u)) == 0:
+          points = turnPoints(current_player,(i,u))
+          if points > 0:
+            turns.append(((i,u), points))
+  turns.sort(key=lambda tupl: tupl[1], reverse=True)
+  return turns
+
+def setStone(player, field):
+  game_field[field[0]][field[1]] = player
 
 def turnStones(field_placed):
   current_player = fieldValue(field_placed)
@@ -186,31 +233,81 @@ def turnStones(field_placed):
       fieldToTurn[0] += offset_col
       fieldToTurn[1] += offset_row
 
-
 def playTurn(current_player):
+  print(allTurnsPoints(current_player))
+
+  #input
   if current_player == 1:
     inp = str(input(PROMPT_PLAYER_1)).upper()
   elif current_player == 2:
     inp = str(input(PROMPT_PLAYER_2)).upper()
   
-  if not checkInput(inp):
-    return False
+  #process input
+  if inp == "SKIP":
+    if checkAnyTurnPossible(current_player):
+      print(ERROR_INVALID_INPUT)
+      return 1
+    return 0
+  elif inp == "QUIT":
+    return 2
+  elif checkValidCoord(inp):
+    field = convCoordToNum(inp)
 
-  field = convCoordToNum(inp)
+    if not checkTurnPossible(field, current_player):
+      print(ERROR_NOT_ALLOWED)
+      return 1
 
-  setStone(current_player, field)
-<<<<<<< Updated upstream
+    setStone(current_player, field)
 
-  if not checkTurnPossible(field, current_player):
-    print(ERROR_NOT_ALLOWED)
-    setStone(0, field)
-    return False
+    turnStones(field)
+    return 0
+  else:
+    print(ERROR_INVALID_INPUT)
+    return 1
 
-=======
->>>>>>> Stashed changes
-  turnStones(field)
-  return True
+def main():
+  printBoard(game_field)
+  current_player = 1
 
+  while(True):
+    turnResult = playTurn(current_player)
+
+    if turnResult == 1:
+      continue
+    elif turnResult == 2:
+      return 0
+
+    printBoard(game_field)
+
+    if current_player == 1:
+      current_player = 2
+    else:
+      current_player = 1
+    
+    if not (checkAnyTurnPossible(1) or checkAnyTurnPossible(2)):
+        pointsPlayer1 = 0
+        pointsPlayer2 = 0
+
+        for i in game_field:
+          for u in i:
+            if u == 1:
+              pointsPlayer1 += 1
+            elif u == 2:
+              pointsPlayer2 += 1
+
+        print(STATISTICS_1 + str(pointsPlayer1))
+        print(STATISTICS_2 + str(pointsPlayer2))
+
+        if pointsPlayer1 > pointsPlayer2:
+          print(WON_PLAYER_1)
+          return 1
+        elif pointsPlayer2 > pointsPlayer1:
+          print(WON_PLAYER_2)
+          return 2
+        else:
+          print(WON_DRAW)
+          return 3
+          
 
 if __name__ == "__main__":
   main()
