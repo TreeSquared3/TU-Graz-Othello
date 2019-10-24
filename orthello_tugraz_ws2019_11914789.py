@@ -47,15 +47,26 @@ MODE_HUMAN = "human"
 # END OF OWN STATIC STRINGS
 
 game_field_start = [
-  [0, 0, 0, 0, 0, 0, 0, 0],
-  [0, 0, 0, 0, 0, 0, 0, 0],
-  [0, 0, 0, 0, 0, 0, 0, 0],
-  [0, 0, 0, 1, 2, 0, 0, 0],
-  [0, 0, 0, 2, 1, 0, 0, 0],
-  [0, 0, 0, 0, 0, 0, 0, 0],
-  [0, 0, 0, 0, 0, 0, 0, 0],
-  [0, 0, 0, 0, 0, 0, 0, 0],
+  [1, 1, 1, 1, 1, 1, 1, 1],
+  [1, 1, 1, 1, 1, 1, 1, 1],
+  [1, 1, 0, 0, 0, 0, 1, 1],
+  [1, 1, 0, 1, 2, 0, 1, 1],
+  [1, 1, 0, 2, 1, 0, 1, 1],
+  [1, 1, 0, 0, 0, 0, 1, 1],
+  [1, 1, 1, 1, 1, 1, 1, 1],
+  [1, 1, 1, 1, 1, 1, 1, 1],
 ]
+
+# game_field_start = [
+#   [0, 0, 0, 0, 0, 0, 0, 0],
+#   [0, 0, 0, 0, 0, 0, 0, 0],
+#   [0, 0, 0, 0, 0, 0, 0, 0],
+#   [0, 0, 0, 1, 2, 0, 0, 0],
+#   [0, 0, 0, 2, 1, 0, 0, 0],
+#   [0, 0, 0, 0, 0, 0, 0, 0],
+#   [0, 0, 0, 0, 0, 0, 0, 0],
+#   [0, 0, 0, 0, 0, 0, 0, 0],
+# ]
 
 game_field = game_field_start
 
@@ -93,10 +104,10 @@ def fieldValue(field):
   return game_field[field[0]][field[1]]
 
 def numsToCoord(field):
-  return chr(ord("A")+field[0])+str(field[1])
+  return chr(ord("a")+field[0])+str(field[1])
 
 def coordToNums(coord):
-  return ord(coord[0])-ord("A"), int(coord[1])
+  return ord(coord[0])-ord("a"), int(coord[1])
 
 def fieldInRange(field):
   if not (int(field[0]) in range(0,8) and int(field[1]) in range(0,8)):
@@ -125,6 +136,13 @@ def validCoord(coord):
 
 def turnPoints(current_player, turn):
   return len(stonesToFlip(current_player, turn))
+
+def fieldFull():
+  for row in game_field:
+    for field in row:
+      if field == 0:
+        return False
+  return True
 
 def stonesToFlip(current_player, turn):
   flippedStonesTotal = []
@@ -205,6 +223,7 @@ def playTurnAi():
   possibleTurns = allTurnsPoints(2)
 
   if len(possibleTurns) <= 0:
+    print(PROMPT_AI + INPUT_SKIP)
     return INPUT_SKIP
 
   coord = numsToCoord(possibleTurns[0][0])
@@ -214,6 +233,7 @@ def playTurnAi():
   return coord
 
 def playTurnHuman(mode, current_player):
+  # return values:
   # 0 ... placed stone
   # 1 ... error
   # 2 ... quit
@@ -222,11 +242,11 @@ def playTurnHuman(mode, current_player):
 
   #input
   if current_player == 1:
-    inp = input(PROMPT_PLAYER_1).upper()
+    inp = input(PROMPT_PLAYER_1).lower()
   elif current_player == 2 and mode == MODE_HUMAN:
-    inp = input(PROMPT_PLAYER_2).upper()
+    inp = input(PROMPT_PLAYER_2).lower()
   elif current_player == 2 and mode == MODE_AI:
-    inp = playTurnAi().upper()
+    inp = playTurnAi().lower()
   
   #process input
   if inp == INPUT_SKIP:
@@ -254,7 +274,7 @@ def main():
   #prompt AI or human
   mode = ""
   while(mode == ""):
-    inp = str(input(PROMPT_HUMAN_AI))
+    inp = str(input(PROMPT_HUMAN_AI)).lower()
 
     if inp == INPUT_COMPUTER:
       mode = MODE_AI
@@ -286,7 +306,7 @@ def main():
       current_player = 1
 
     # if skipped two times in a row, print results
-    if turnResult == 3 and lastPlay == 3:
+    if fieldFull() or (turnResult == 3 and lastPlay == 3): #implement check if board full
         pointsPlayer1 = 0
         pointsPlayer2 = 0
 
