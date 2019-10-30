@@ -2,9 +2,6 @@
 # Name:       Martin Baumann
 # Student ID: 11914789
 
-# known issues:
-# started spamming invalid input when playing against ai and only one field left
-
 import random
 
 # STATIC STRINGS - DO NOT CHANGE
@@ -46,29 +43,27 @@ MODE_HUMAN = "human"
 
 # END OF OWN STATIC STRINGS
 
-game_field_start = [
-  [1, 1, 1, 1, 1, 1, 1, 1],
-  [1, 1, 1, 1, 1, 1, 1, 1],
-  [1, 1, 0, 0, 0, 0, 1, 1],
-  [1, 1, 0, 1, 2, 0, 1, 1],
-  [1, 1, 0, 2, 1, 0, 1, 1],
-  [1, 1, 0, 0, 0, 0, 1, 1],
-  [1, 1, 1, 1, 1, 1, 1, 1],
-  [1, 1, 1, 1, 1, 1, 1, 1],
-]
-
-# game_field_start = [
-#   [0, 0, 0, 0, 0, 0, 0, 0],
-#   [0, 0, 0, 0, 0, 0, 0, 0],
-#   [0, 0, 0, 0, 0, 0, 0, 0],
-#   [0, 0, 0, 1, 2, 0, 0, 0],
-#   [0, 0, 0, 2, 1, 0, 0, 0],
-#   [0, 0, 0, 0, 0, 0, 0, 0],
-#   [0, 0, 0, 0, 0, 0, 0, 0],
-#   [0, 0, 0, 0, 0, 0, 0, 0],
+# game_field = [
+#   [1, 1, 1, 1, 1, 1, 1, 1],
+#   [1, 1, 1, 1, 1, 1, 1, 1],
+#   [1, 1, 0, 0, 0, 0, 1, 1],
+#   [1, 1, 0, 1, 2, 0, 1, 1],
+#   [1, 1, 0, 2, 1, 0, 1, 1],
+#   [1, 1, 0, 0, 0, 0, 1, 1],
+#   [1, 1, 1, 1, 1, 1, 1, 1],
+#   [1, 1, 1, 1, 1, 1, 1, 1],
 # ]
 
-game_field = game_field_start
+game_field = [
+  [0, 0, 0, 0, 0, 0, 0, 0],
+  [0, 0, 0, 0, 0, 0, 0, 0],
+  [0, 0, 0, 0, 0, 0, 0, 0],
+  [0, 0, 0, 1, 2, 0, 0, 0],
+  [0, 0, 0, 2, 1, 0, 0, 0],
+  [0, 0, 0, 0, 0, 0, 0, 0],
+  [0, 0, 0, 0, 0, 0, 0, 0],
+  [0, 0, 0, 0, 0, 0, 0, 0],
+]
 
 
 # A function to print boardData provided.
@@ -98,7 +93,6 @@ def printBoard(boardData):
 
   print("   └───┴───┴───┴───┴───┴───┴───┴───┘")
   print("     0   1   2   3   4   5   6   7  ")
-
 
 def fieldValue(field):
   return game_field[field[0]][field[1]]
@@ -155,7 +149,8 @@ def stonesToFlip(current_player, turn):
   if fieldOccupied(turn):
     return []
 
-  for offset_col, offset_row in ((-1,0),(-1,1),(0,1),(1,1),(1,0),(1,-1),(0,-1),(-1,-1)): #up, up-right, right, down-right, down, down-left, left, up-left
+                                #up, up-right, right, down-right, down, down-left, left, up-left
+  for offset_col, offset_row in ((-1,0),(-1,1),(0,1),(1,1),(1,0),(1,-1),(0,-1),(-1,-1)):
     turnToCheck = list(turn)
     turnToCheck[0] += offset_col
     turnToCheck[1] += offset_row
@@ -186,18 +181,19 @@ def stonesToFlip(current_player, turn):
 
 def allTurnsPoints(current_player):
   turns = []
-  for i in range(0,8):
-      for u in range(0,8):
-        if fieldValue((i,u)) == 0:
-          points = turnPoints(current_player,(i,u))
+  for row in range(0,8):
+      for column in range(0,8):
+        field = (row,column)
+        if fieldValue(field) == 0:
+          points = turnPoints(current_player,field)
           if points > 0:
-            turns.append(((i,u), points))
+            turns.append((field, points))
   
   random.shuffle(turns)
   turns.sort(key=lambda tupl: tupl[1], reverse=True)
   return turns
 
-def turnPossible(turn, current_player):
+def turnPossible(current_player, turn):
   return turnPoints(current_player, turn) > 0
 
 def anyTurnPossible(current_player):
@@ -259,7 +255,7 @@ def playTurnHuman(mode, current_player):
   elif validCoord(inp):
     field = coordToNums(inp)
 
-    if not turnPossible(field, current_player):
+    if not turnPossible(current_player, field):
       print(ERROR_NOT_ALLOWED)
       return 1
 
@@ -305,8 +301,8 @@ def main():
     else:
       current_player = 1
 
-    # if skipped two times in a row, print results
-    if fieldFull() or (turnResult == 3 and lastPlay == 3): #implement check if board full
+    # if no more moves possible, print results
+    if fieldFull() or (turnResult == 3 and lastPlay == 3):
         pointsPlayer1 = 0
         pointsPlayer2 = 0
 
