@@ -41,18 +41,23 @@ INPUT_QUIT = "quit"
 MODE_AI = "ai"
 MODE_HUMAN = "human"
 
+TURN_PLACED_STONE = 0
+TURN_ERROR = 1
+TURN_QUIT = 2
+TURN_SKIP = 3
+
 # END OF OWN STATIC STRINGS
 
-# game_field = [
-#   [1, 1, 1, 1, 1, 1, 1, 1],
-#   [1, 1, 1, 1, 1, 1, 1, 1],
-#   [1, 1, 0, 0, 0, 0, 1, 1],
-#   [1, 1, 0, 1, 2, 0, 1, 1],
-#   [1, 1, 0, 2, 1, 0, 1, 1],
-#   [1, 1, 0, 0, 0, 0, 1, 1],
-#   [1, 1, 1, 1, 1, 1, 1, 1],
-#   [1, 1, 1, 1, 1, 1, 1, 1],
-# ]
+""" game_field = [
+  [1, 1, 1, 1, 1, 1, 1, 1],
+  [1, 1, 1, 1, 1, 1, 1, 1],
+  [1, 1, 0, 0, 0, 0, 1, 1],
+  [1, 1, 0, 1, 2, 0, 1, 1],
+  [1, 1, 0, 2, 1, 0, 1, 1],
+  [1, 1, 0, 0, 0, 0, 1, 1],
+  [1, 1, 1, 1, 1, 1, 1, 1],
+  [1, 1, 1, 1, 1, 1, 1, 1],
+] """
 
 game_field = [
   [0, 0, 0, 0, 0, 0, 0, 0],
@@ -128,30 +133,24 @@ def validCoord(coord):
 
   return True
 
-def turnPoints(current_player, turn):
-  return len(stonesToFlip(current_player, turn))
-
 def fieldFull():
   for row in game_field:
-    for field in row:
-      if field == 0:
-        return False
+    if 0 in row:
+      return False
   return True
 
-def stonesToFlip(current_player, turn):
+# returns number of stones that would be flipped of a player placed their stone
+def turnStoneFlips(player, field):
   flippedStonesTotal = []
   
-  if current_player == 1:
-    opponent = 2
-  else:
-    opponent = 1
+  opponent = (player % 2) + 1
 
-  if fieldOccupied(turn):
+  if fieldOccupied(field):
     return []
 
                                 #up, up-right, right, down-right, down, down-left, left, up-left
   for offset_col, offset_row in ((-1,0),(-1,1),(0,1),(1,1),(1,0),(1,-1),(0,-1),(-1,-1)):
-    turnToCheck = list(turn)
+    turnToCheck = list(field)
     turnToCheck[0] += offset_col
     turnToCheck[1] += offset_row
 
@@ -174,18 +173,18 @@ def stonesToFlip(current_player, turn):
     if outOfField:
       continue
 
-    if fieldValue(turnToCheck) == current_player:
+    if fieldValue(turnToCheck) == player:
       flippedStonesTotal.extend(flippedStonesCurDir)
 
   return flippedStonesTotal
 
-def allTurnsPoints(current_player):
+def allTurnsPoints(player):
   turns = []
   for row in range(0,8):
       for column in range(0,8):
         field = (row,column)
         if fieldValue(field) == 0:
-          points = turnPoints(current_player,field)
+          points = len(turnStoneFlips(player,field))
           if points > 0:
             turns.append((field, points))
   
@@ -193,27 +192,20 @@ def allTurnsPoints(current_player):
   turns.sort(key=lambda tupl: tupl[1], reverse=True)
   return turns
 
-def turnPossible(current_player, turn):
-  return turnPoints(current_player, turn) > 0
+def turnPossible(player, field):
+  return len(turnStoneFlips(player, field)) > 0
 
-def anyTurnPossible(current_player):
-  return len(allTurnsPoints(current_player)) > 0
+def anyTurnPossible(player):
+  return len(allTurnsPoints(player)) > 0
 
 def playStone(player, field):
-  turnStones(player, field)
+  for fieldToFlip in turnStoneFlips(player, field):
+    setStone(player, fieldToFlip)
+
   setStone(player, field)
 
 def setStone(player, field):
   game_field[field[0]][field[1]] = player
-
-def turnStones(current_player, placedStone):
-  if current_player == 1:
-    opponent = 2
-  else:
-    opponent = 1
-
-  for field in stonesToFlip(current_player, placedStone):
-    setStone(current_player, field)
 
 def playTurnAi():
   possibleTurns = allTurnsPoints(2)
@@ -228,43 +220,36 @@ def playTurnAi():
 
   return coord
 
-def playTurnHuman(mode, current_player):
-  # return values:
-  # 0 ... placed stone
-  # 1 ... error
-  # 2 ... quit
-  # 3 ... skip
-  #print(allTurnsPoints(current_player))
-
+def playTurnHuman(mode, player):
   #input
-  if current_player == 1:
+  if player == 1:
     inp = input(PROMPT_PLAYER_1).lower()
-  elif current_player == 2 and mode == MODE_HUMAN:
+  elif player == 2 and mode == MODE_HUMAN:
     inp = input(PROMPT_PLAYER_2).lower()
-  elif current_player == 2 and mode == MODE_AI:
+  elif player == 2 and mode == MODE_AI:
     inp = playTurnAi().lower()
   
   #process input
   if inp == INPUT_SKIP:
-    if anyTurnPossible(current_player):
+    if anyTurnPossible(player):
       print(ERROR_INVALID_INPUT)
-      return 1
-    return 3
+      return TURN_ERROR
+    return TURN_SKIP
   elif inp == INPUT_QUIT:
-    return 2
+    return TURN_QUIT
   elif validCoord(inp):
     field = coordToNums(inp)
 
-    if not turnPossible(current_player, field):
+    if not turnPossible(player, field):
       print(ERROR_NOT_ALLOWED)
-      return 1
+      return TURN_ERROR
 
-    playStone(current_player, field)
+    playStone(player, field)
 
-    return 0
+    return TURN_PLACED_STONE
   else:
     print(ERROR_INVALID_INPUT)
-    return 1
+    return TURN_ERROR
 
 def main():
   #prompt AI or human
@@ -279,7 +264,7 @@ def main():
     else:
       print(ERROR_INVALID_INPUT)
 
-  current_player = 1
+  player = 1
 
   #play
   printBoard(game_field)
@@ -287,22 +272,19 @@ def main():
   lastPlay = -1
 
   while(True):
-    turnResult = playTurnHuman(mode, current_player)
+    turnResult = playTurnHuman(mode, player)
 
     printBoard(game_field)
 
-    if turnResult == 1:
+    if turnResult == TURN_ERROR:
       continue
-    elif turnResult == 2:
+    elif turnResult == TURN_QUIT:
       return 0
 
-    if current_player == 1:
-      current_player = 2
-    else:
-      current_player = 1
+    player = (player % 2) + 1
 
     # if no more moves possible, print results
-    if fieldFull() or (turnResult == 3 and lastPlay == 3):
+    if fieldFull() or (turnResult == TURN_SKIP and lastPlay == TURN_SKIP):
         pointsPlayer1 = 0
         pointsPlayer2 = 0
 
