@@ -60,255 +60,274 @@ TURN_SKIP = 3
 ] """
 
 game_field = [
-  [0, 0, 0, 0, 0, 0, 0, 0],
-  [0, 0, 0, 0, 0, 0, 0, 0],
-  [0, 0, 0, 0, 0, 0, 0, 0],
-  [0, 0, 0, 1, 2, 0, 0, 0],
-  [0, 0, 0, 2, 1, 0, 0, 0],
-  [0, 0, 0, 0, 0, 0, 0, 0],
-  [0, 0, 0, 0, 0, 0, 0, 0],
-  [0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 1, 2, 0, 0, 0],
+    [0, 0, 0, 2, 1, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0],
 ]
 
 
 # A function to print boardData provided.
-def printBoard(boardData):
-  print("\n   ┌───┬───┬───┬───┬───┬───┬───┬───┐")
+def print_board(board_data):
+    print("\n   ┌───┬───┬───┬───┬───┬───┬───┬───┐")
 
-  row_keys = ["A", "B", "C", "D", "E", "F", "G", "H"]
+    row_keys = ["A", "B", "C", "D", "E", "F", "G", "H"]
 
-  row_count = 0
+    row_count = 0
 
-  for row in boardData:
-    column_string = " " + row_keys[row_count] + " │"
-    for column in row:
-      if column == 1:
-        column_text = TERMINAL_COLOR_1 + "1" + TERMINAL_COLOR_NC
-      elif column == 2:
-        column_text = TERMINAL_COLOR_2 + "2" + TERMINAL_COLOR_NC
-      else:
-        column_text = TERMINAL_COLOR_EMPTY + "0" + TERMINAL_COLOR_NC
+    for row in board_data:
+        column_string = " " + row_keys[row_count] + " │"
+        for column in row:
+            if column == 1:
+                column_text = TERMINAL_COLOR_1 + "1" + TERMINAL_COLOR_NC
+            elif column == 2:
+                column_text = TERMINAL_COLOR_2 + "2" + TERMINAL_COLOR_NC
+            else:
+                column_text = TERMINAL_COLOR_EMPTY + "0" + TERMINAL_COLOR_NC
 
-      column_string += " " + column_text + " │"
-    print(column_string)
+            column_string += " " + column_text + " │"
+        print(column_string)
 
-    row_count = row_count + 1
-    if (row_count < len(boardData)):
-      print("   ├───┼───┼───┼───┼───┼───┼───┼───┤")
+        row_count = row_count + 1
+        if row_count < len(board_data):
+            print("   ├───┼───┼───┼───┼───┼───┼───┼───┤")
 
-  print("   └───┴───┴───┴───┴───┴───┴───┴───┘")
-  print("     0   1   2   3   4   5   6   7  ")
+    print("   └───┴───┴───┴───┴───┴───┴───┴───┘")
+    print("     0   1   2   3   4   5   6   7  ")
 
-def fieldValue(field):
-  return game_field[field[0]][field[1]]
 
-def numsToCoord(field):
-  return chr(ord("a")+field[0])+str(field[1])
+def field_value(field):
+    return game_field[field[0]][field[1]]
 
-def coordToNums(coord):
-  return ord(coord[0])-ord("a"), int(coord[1])
 
-def fieldInRange(field):
-  if not (int(field[0]) in range(0,8) and int(field[1]) in range(0,8)):
-    return False
-  return True
+def nums_to_coord(field):
+    return chr(ord("a") + field[0]) + str(field[1])
 
-def fieldOccupied(field):
-  if not fieldValue(field) == 0:
-    print(ERROR_OCCUPIED)
+
+def coord_to_nums(coord):
+    return ord(coord[0]) - ord("a"), int(coord[1])
+
+
+def field_in_range(field):
+    if not (int(field[0]) in range(0, 8) and int(field[1]) in range(0, 8)):
+        return False
     return True
-  return False
 
-def validCoord(coord):
-  if len(coord) != 2:
-    return False
-  
-  try:
-    field = coordToNums(coord)
-  except:
-    return False
-  
-  if not fieldInRange(field):
+
+def field_occupied(field):
+    if not field_value(field) == 0:
+        print(ERROR_OCCUPIED)
+        return True
     return False
 
-  return True
 
-def fieldFull():
-  for row in game_field:
-    if 0 in row:
-      return False
-  return True
+def valid_coord(coord):
+    if len(coord) != 2:
+        return False
+
+    try:
+        field = coord_to_nums(coord)
+    except:
+        return False
+
+    if not field_in_range(field):
+        return False
+
+    return True
+
+
+def field_full():
+    for row in game_field:
+        if 0 in row:
+            return False
+    return True
+
 
 # returns number of stones that would be flipped of a player placed their stone
-def turnStoneFlips(player, field):
-  flippedStonesTotal = []
-  
-  opponent = (player % 2) + 1
+def turn_stone_flips(player, field):
+    flipped_stones_total = []
 
-  if fieldOccupied(field):
-    return []
+    opponent = (player % 2) + 1
 
-                                #up, up-right, right, down-right, down, down-left, left, up-left
-  for offset_col, offset_row in ((-1,0),(-1,1),(0,1),(1,1),(1,0),(1,-1),(0,-1),(-1,-1)):
-    turnToCheck = list(field)
-    turnToCheck[0] += offset_col
-    turnToCheck[1] += offset_row
+    if field_occupied(field):
+        return []
 
-    if not fieldInRange(turnToCheck):
-      continue
+        # up, up-right, right, down-right, down, down-left, left, up-left
+    for offset_col, offset_row in ((-1, 0), (-1, 1), (0, 1), (1, 1), (1, 0), (1, -1), (0, -1), (-1, -1)):
+        turn_to_check = list(field)
+        turn_to_check[0] += offset_col
+        turn_to_check[1] += offset_row
 
-    flippedStonesCurDir = []
+        if not field_in_range(turn_to_check):
+            continue
 
-    outOfField = False
+        flipped_stones_cur_dir = []
 
-    while(fieldValue(turnToCheck) == opponent):
-      flippedStonesCurDir.append(turnToCheck.copy())
+        out_of_field = False
 
-      turnToCheck[0] += offset_col
-      turnToCheck[1] += offset_row
-      if not fieldInRange(turnToCheck):
-        outOfField = True
-        break
-    
-    if outOfField:
-      continue
+        while field_value(turn_to_check) == opponent:
+            flipped_stones_cur_dir.append(turn_to_check.copy())
 
-    if fieldValue(turnToCheck) == player:
-      flippedStonesTotal.extend(flippedStonesCurDir)
+            turn_to_check[0] += offset_col
+            turn_to_check[1] += offset_row
+            if not field_in_range(turn_to_check):
+                out_of_field = True
+                break
 
-  return flippedStonesTotal
+        if out_of_field:
+            continue
 
-def allTurnsPoints(player):
-  turns = []
-  for row in range(0,8):
-      for column in range(0,8):
-        field = (row,column)
-        if fieldValue(field) == 0:
-          points = len(turnStoneFlips(player,field))
-          if points > 0:
-            turns.append((field, points))
-  
-  random.shuffle(turns)
-  turns.sort(key=lambda tupl: tupl[1], reverse=True)
-  return turns
+        if field_value(turn_to_check) == player:
+            flipped_stones_total.extend(flipped_stones_cur_dir)
 
-def turnPossible(player, field):
-  return len(turnStoneFlips(player, field)) > 0
+    return flipped_stones_total
 
-def anyTurnPossible(player):
-  return len(allTurnsPoints(player)) > 0
 
-def playStone(player, field):
-  for fieldToFlip in turnStoneFlips(player, field):
-    setStone(player, fieldToFlip)
+def all_turns_points(player):
+    turns = []
+    for row in range(0, 8):
+        for column in range(0, 8):
+            field = (row, column)
+            if field_value(field) == 0:
+                points = len(turn_stone_flips(player, field))
+                if points > 0:
+                    turns.append((field, points))
 
-  setStone(player, field)
+    random.shuffle(turns)
+    turns.sort(key=lambda tupl: tupl[1], reverse=True)
+    return turns
 
-def setStone(player, field):
-  game_field[field[0]][field[1]] = player
 
-def playTurnAi():
-  possibleTurns = allTurnsPoints(2)
+def turn_possible(player, field):
+    return len(turn_stone_flips(player, field)) > 0
 
-  if len(possibleTurns) <= 0:
-    print(PROMPT_AI + INPUT_SKIP)
-    return INPUT_SKIP
 
-  coord = numsToCoord(possibleTurns[0][0])
+def any_turn_possible(player):
+    return len(all_turns_points(player)) > 0
 
-  print(PROMPT_AI + coord)
 
-  return coord
+def play_stone(player, field):
+    for fieldToFlip in turn_stone_flips(player, field):
+        set_stone(player, fieldToFlip)
 
-def playTurnHuman(mode, player):
-  #input
-  if player == 1:
-    inp = input(PROMPT_PLAYER_1).lower()
-  elif player == 2 and mode == MODE_HUMAN:
-    inp = input(PROMPT_PLAYER_2).lower()
-  elif player == 2 and mode == MODE_AI:
-    inp = playTurnAi().lower()
-  
-  #process input
-  if inp == INPUT_SKIP:
-    if anyTurnPossible(player):
-      print(ERROR_INVALID_INPUT)
-      return TURN_ERROR
-    return TURN_SKIP
-  elif inp == INPUT_QUIT:
-    return TURN_QUIT
-  elif validCoord(inp):
-    field = coordToNums(inp)
+    set_stone(player, field)
 
-    if not turnPossible(player, field):
-      print(ERROR_NOT_ALLOWED)
-      return TURN_ERROR
 
-    playStone(player, field)
+def set_stone(player, field):
+    game_field[field[0]][field[1]] = player
 
-    return TURN_PLACED_STONE
-  else:
-    print(ERROR_INVALID_INPUT)
-    return TURN_ERROR
+
+def play_turn_ai():
+    possible_turns = all_turns_points(2)
+
+    if len(possible_turns) <= 0:
+        print(PROMPT_AI + INPUT_SKIP)
+        return INPUT_SKIP
+
+    coord = nums_to_coord(possible_turns[0][0])
+
+    print(PROMPT_AI + coord)
+
+    return coord
+
+
+def play_turn_human(mode, player):
+    # input
+    if player == 1:
+        inp = input(PROMPT_PLAYER_1).lower()
+    elif player == 2 and mode == MODE_HUMAN:
+        inp = input(PROMPT_PLAYER_2).lower()
+    elif player == 2 and mode == MODE_AI:
+        inp = play_turn_ai().lower()
+    else:
+        inp = ""
+
+    # process input
+    if inp == INPUT_SKIP:
+        if any_turn_possible(player):
+            print(ERROR_INVALID_INPUT)
+            return TURN_ERROR
+        return TURN_SKIP
+    elif inp == INPUT_QUIT:
+        return TURN_QUIT
+    elif valid_coord(inp):
+        field = coord_to_nums(inp)
+
+        if not turn_possible(player, field):
+            print(ERROR_NOT_ALLOWED)
+            return TURN_ERROR
+
+        play_stone(player, field)
+
+        return TURN_PLACED_STONE
+    else:
+        print(ERROR_INVALID_INPUT)
+        return TURN_ERROR
+
 
 def main():
-  #prompt AI or human
-  mode = ""
-  while(mode == ""):
-    inp = str(input(PROMPT_HUMAN_AI)).lower()
+    # prompt AI or human
+    mode = ""
+    while mode == "":
+        inp = str(input(PROMPT_HUMAN_AI)).lower()
 
-    if inp == INPUT_COMPUTER:
-      mode = MODE_AI
-    elif inp == INPUT_HUMAN:
-      mode = MODE_HUMAN
-    else:
-      print(ERROR_INVALID_INPUT)
-
-  player = 1
-
-  #play
-  printBoard(game_field)
-
-  lastPlay = -1
-
-  while(True):
-    turnResult = playTurnHuman(mode, player)
-
-    printBoard(game_field)
-
-    if turnResult == TURN_ERROR:
-      continue
-    elif turnResult == TURN_QUIT:
-      return 0
-
-    player = (player % 2) + 1
-
-    # if no more moves possible, print results
-    if fieldFull() or (turnResult == TURN_SKIP and lastPlay == TURN_SKIP):
-        pointsPlayer1 = 0
-        pointsPlayer2 = 0
-
-        for i in game_field:
-          for u in i:
-            if u == 1:
-              pointsPlayer1 += 1
-            elif u == 2:
-              pointsPlayer2 += 1
-
-        print(STATISTICS_1 + str(pointsPlayer1))
-        print(STATISTICS_2 + str(pointsPlayer2))
-
-        if pointsPlayer1 > pointsPlayer2:
-          print(WON_PLAYER_1)
-          return 1
-        elif pointsPlayer2 > pointsPlayer1:
-          print(WON_PLAYER_2)
-          return 2
+        if inp == INPUT_COMPUTER:
+            mode = MODE_AI
+        elif inp == INPUT_HUMAN:
+            mode = MODE_HUMAN
         else:
-          print(WON_DRAW)
-          return 3
-    
-    lastPlay = turnResult
+            print(ERROR_INVALID_INPUT)
+
+    player = 1
+
+    # play
+    print_board(game_field)
+
+    last_play = -1
+
+    while True:
+        turn_result = play_turn_human(mode, player)
+
+        print_board(game_field)
+
+        if turn_result == TURN_ERROR:
+            continue
+        elif turn_result == TURN_QUIT:
+            return 0
+
+        player = (player % 2) + 1
+
+        # if no more moves possible, print results
+        if field_full() or (turn_result == TURN_SKIP and last_play == TURN_SKIP):
+            points_player1 = 0
+            points_player2 = 0
+
+            for i in game_field:
+                for u in i:
+                    if u == 1:
+                        points_player1 += 1
+                    elif u == 2:
+                        points_player2 += 1
+
+            print(STATISTICS_1 + str(points_player1))
+            print(STATISTICS_2 + str(points_player2))
+
+            if points_player1 > points_player2:
+                print(WON_PLAYER_1)
+                return 1
+            elif points_player2 > points_player1:
+                print(WON_PLAYER_2)
+                return 2
+            else:
+                print(WON_DRAW)
+                return 3
+
+        last_play = turn_result
+
 
 if __name__ == "__main__":
-  main()
+    main()
